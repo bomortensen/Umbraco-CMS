@@ -58,5 +58,10 @@ namespace Umbraco.Web.Models.ContentEditing
         [DataMember(Name = "allowedActions")]
         public IEnumerable<char> AllowedActions { get; set; }
 
+        /// <summary>
+        ///     Collection of <see cref="ContentRedirectUrl"/> related to this content item
+        /// </summary>
+        [DataMember(Name = "Redirect URLs")]
+        public IEnumerable<ContentRedirectUrl> RedirectUrls { get; set; }
     }
 }

@@ -65,6 +65,7 @@ namespace Umbraco.Web.Models.Mapping
                         UmbracoContext.Current == null
                             ? new[] {"Cannot generate urls without a current Umbraco Context"}
                             : content.GetContentUrls(UmbracoContext.Current)))
+                .ForMember(dto => dto.RedirectUrls, expression => expression.ResolveUsing(new RedirectResolver(applicationContext.Services.RedirectUrlService)))
                 .ForMember(display => display.Properties, expression => expression.Ignore())
                 .ForMember(display => display.AllowPreview, expression => expression.Ignore())
                 .ForMember(display => display.TreeNodeUrl, expression => expression.Ignore())
@@ -281,6 +282,31 @@ namespace Umbraco.Web.Models.Mapping
                 return published.UpdateDate;
             }
             return null;
+        }
+
+        /// <summary>
+        ///     Resolves a collection of <see cref="ContentRedirectUrl"/> for a given <see cref="IContent"/>
+        /// </summary>
+        private class RedirectResolver : ValueResolver<IContent, IEnumerable<ContentRedirectUrl>>
+        {
+            private IRedirectUrlService _redirectUrlService;
+
+            public RedirectResolver(IRedirectUrlService redirectService)
+            {
+                _redirectUrlService = redirectService;
+            }
+
+            protected override IEnumerable<ContentRedirectUrl> ResolveCore(IContent source)
+            {
+                if (source == null)
+                    return Enumerable.Empty<ContentRedirectUrl>();
+
+                // TODO: the redirect url service should implement a paged version of GetContentRedirectUrls
+                // to avoid getting *all* redirect urls on a single request
+                IEnumerable<IRedirectUrl> redirectUrls = _redirectUrlService.GetContentRedirectUrls(source.Key);
+
+                return Mapper.Map<IEnumerable<ContentRedirectUrl>>(redirectUrls);
+            }
         }
 
         /// <summary>
